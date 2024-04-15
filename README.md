@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Здравствуй!!!</title>
+<link rel="stylesheet" href="bluestyle.css">
+</head>
+<body>
+<h1>Какие новость?</h1>
+<p>Это просто страница для Git</p>
+<p>Новая строка в этом файле</p>
+</body>
+</html>
