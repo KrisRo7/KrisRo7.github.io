@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ПрофТренажер ППОС СибГИУ</title>
+    <style>
+        :root {
+            --primary-color: #004b93;
+            --secondary-color: #ffffff;
+            --accent-grey: #f0f4f8;
+            --text-dark: #1c2d42;
+            --text-muted: #5a6e85;
+            --success-color: #218838;
+            --error-color: #c82333;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: var(--accent-grey); color: var(--text-dark); line-height: 1.6; }
+        header { background-color: var(--primary-color); color: var(--secondary-color); padding: 25px 20px; text-align: center; border-bottom: 4px solid #003670; }
+        header h1 { font-size: 1.6rem; margin-bottom: 5px; text-transform: uppercase; }
+        header p { font-size: 1rem; opacity: 0.9; }
+        
+        nav { display: flex; justify-content: center; background-color: #003670; overflow-x: auto; position: sticky; top: 0; z-index: 100; }
+        nav button { background: none; border: none; color: rgba(255,255,255,0.8); padding: 15px 20px; font-size: 0.95rem; cursor: pointer; transition: 0.3s; white-space: nowrap; }
+        nav button:hover, nav button.active { color: white; background-color: var(--primary-color); font-weight: bold; }
+
+        .container { max-width: 900px; margin: 25px auto; padding: 0 15px; }
+        .app-section { display: none; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .app-section.active { display: block; }
+        h2 { color: var(--primary-color); margin-bottom: 20px; font-size: 1.5rem; border-bottom: 2px solid var(--accent-grey); padding-bottom: 10px; }
+
+        /* Стили для карточек лекций */
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .lecture-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; }
+        .lecture-card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+        .lecture-cover { width: 100%; height: 160px; object-fit: cover; background: #cbd5e1; }
+        .lecture-content { padding: 15px; flex-grow: 1; display: flex; flex-direction: column; }
+        .lecture-title { font-size: 1.1rem; color: var(--primary-color); margin-bottom: 5px; font-weight: bold; }
+        .lecture-author { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px; font-style: italic; }
+        .lecture-desc { font-size: 0.9rem; color: var(--text-dark); margin-bottom: 15px; flex-grow: 1; }
+        .btn-group { display: flex; gap: 10px; }
+        
+        .btn { padding: 8px 12px; border-radius: 6px; font-size: 0.9rem; font-weight: 600; text-align: center; cursor: pointer; text-decoration: none; transition: 0.2s; border: none; flex: 1; }
+        .btn-primary { background-color: var(--primary-color); color: white; }
+        .btn-primary:hover { background-color: #003670; }
+        .btn-outline { background-color: transparent; color: var(--primary-color); border: 1px solid var(--primary-color); }
+        .btn-outline:hover { background-color: var(--accent-grey); }
+
+        /* Стили для календаря */
+        .event-card { border-left: 5px solid var(--primary-color); background: #f8fafc; padding: 15px; margin-bottom: 15px; border-radius: 0 8px 8px 0; }
+        .event-badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; color: white; margin-bottom: 8px; }
+        .badge-vuz { background-color: #0056b3; }
+        .badge-reg { background-color: #e67e22; }
+        .badge-rus { background-color: #c0392b; }
+        .event-date { font-weight: bold; color: var(--text-dark); font-size: 0.9rem; }
+        .event-title { font-size: 1.2rem; margin: 5px 0; color: var(--primary-color); }
+
+        /* Стили для тренажера */
+        .question-box { margin-top: 20px; padding: 20px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .options-list { list-style: none; margin-top: 15px; }
+        .options-list li { background: white; padding: 12px; margin-bottom: 10px; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; transition: 0.2s; }
+        .options-list li:hover { border-color: var(--primary-color); background: #f1f5f9; }
+        input[type="text"] { width: 100%; padding: 12px; margin-top: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 1rem; }
+        .match-row { display: flex; justify-content: space-between; align-items: center; background: white; padding: 10px; margin-bottom: 10px; border-radius: 6px; border: 1px solid #cbd5e1; }
+        .match-row select { padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-size: 1rem; }
+        .feedback { margin-top: 20px; padding: 15px; border-radius: 6px; font-weight: 600; display: none; }
+
+        /* Стили для Головоломки (Угадай личность) */
+        .puzzle-card { text-align: center; padding: 20px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; }
+        .puzzle-img { max-width: 100%; height: 350px; object-fit: cover; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); margin-bottom: 20px; }
+        .puzzle-answer { display: none; background: white; padding: 20px; border-radius: 8px; border-left: 5px solid var(--success-color); text-align: left; margin-bottom: 20px; }
+        .puzzle-name { font-size: 1.3rem; font-weight: bold; color: var(--primary-color); margin-bottom: 5px; }
+        .puzzle-pos { font-size: 1rem; color: var(--text-dark); font-weight: 600; margin-bottom: 10px; }
+        .puzzle-hint { font-size: 0.9rem; color: var(--text-muted); font-style: italic; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>ПрофТренажер ППОС СибГИУ</h1>
+        <p>Платформа подготовки к конкурсам «Студлидер» и «Ты — лидер»</p>
+    </header>
+
+    <nav>
+        <button class="active" onclick="switchSection('lectures', this)">📚 Лекции</button>
+        <button onclick="switchSection('events', this)">📢 Афиша конкурсов</button>
+        <button onclick="switchSection('trainer', this)">🎯 Тренажер</button>
+        <button onclick="switchSection('puzzle', this)">🖼 Угадай личность</button>
+    </nav>
+
+    <div class="container">
+        
+        <!-- РАЗДЕЛ 1: ЛЕКЦИИ -->
+        <section id="lectures" class="app-section active">
+            <h2>База знаний: Презентации</h2>
+            <div class="grid" id="lectures-grid"></div>
+        </section>
+
+        <!-- РАЗДЕЛ 2: КАЛЕНДАРЬ -->
+        <section id="events" class="app-section">
+            <h2>Афиша конкурсов и этапов</h2>
+            <div id="events-list"></div>
+        </section>
+
+        <!-- РАЗДЕЛ 3: ТРЕНАЖЕР -->
+        <section id="trainer" class="app-section">
+            <h2>Интерактивный тренажер</h2>
+            <div class="question-box" id="trainer-box"></div>
+            <div class="feedback" id="feedback-box"></div>
+            <button class="btn btn-primary" style="margin-top: 15px; width: 100%;" onclick="nextQuestion()">Следующий вопрос ➡️</button>
+        </section>
+
+        <!-- РАЗДЕЛ 4: ГОЛОВОЛОМКА -->
+        <section id="puzzle" class="app-section">
+            <h2>Головоломка: Угадай личность</h2>
+            <p style="color: var(--text-muted); margin-bottom: 15px;">Вспомните ФИО и должность человека на фотографии, затем проверьте себя.</p>
+            
+            <div class="puzzle-card" id="puzzle-box"></div>
+        </section>
+
+    </div>
+
+    <!-- ПОДКЛЮЧАЕМ ФАЙЛ С ДАННЫМИ -->
+    <script src="data.js"></script>
+
+    <script>
+        // --- 1. ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК ---
+        function switchSection(sectionId, btnElement) {
+            document.querySelectorAll('.app-section').forEach(sec => sec.classList.remove('active'));
+            document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+            btnElement.classList.add('active');
+        }
+
+        // --- 2. ОТРИСОВКА ЛЕКЦИЙ ---
+        function renderLectures() {
+            const grid = document.getElementById('lectures-grid');
+            siteData.lectures.forEach(lec => {
+                grid.innerHTML += `
+                    <div class="lecture-card">
+                        <img src="${lec.cover}" class="lecture-cover" alt="Превью" onerror="this.src='https://via.placeholder.com/400x160/004b93/ffffff?text=Презентация'">
+                        <div class="lecture-content">
+                            <div class="lecture-title">${lec.title}</div>
+                            <div class="lecture-author">👤 ${lec.author}</div>
+                            <div class="lecture-desc">${lec.desc}</div>
+                            <div class="btn-group">
+                                <a href="${lec.pdf}" target="_blank" class="btn btn-primary">👁 Смотреть</a>
+                                <a href="${lec.pdf}" download class="btn btn-outline">⬇ Скачать</a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // --- 3. ОТРИСОВКА АФИШИ ---
+        function renderEvents() {
+            const list = document.getElementById('events-list');
+            siteData.events.forEach(ev => {
+                let badgeClass = ev.level === "Вузовский" ? "badge-vuz" : (ev.level === "Региональный" ? "badge-reg" : "badge-rus");
+                list.innerHTML += `
+                    <div class="event-card">
+                        <span class="event-badge ${badgeClass}">${ev.level} этап</span>
+                        <div class="event-date">🗓 ${ev.date}</div>
+                        <div class="event-title">${ev.title}</div>
+                        <p>${ev.desc}</p>
+                        ${ev.link !== '#' ? `<a href="${ev.link}" target="_blank" style="color: var(--primary-color); font-weight: bold;">Регистрация/Подробнее ➡</a>` : ''}
+                    </div>
+                `;
+            });
+        }
+
+        // --- 4. ТРЕНАЖЕР ---
+        let currentQ = 0;
+
+        function renderQuestion() {
+            const q = siteData.questions[currentQ];
+            const box = document.getElementById('trainer-box');
+            const feedback = document.getElementById('feedback-box');
+            feedback.style.display = 'none';
+
+            if (q.type === 'choice') {
+                let optionsHtml = q.options.map((opt, index) => `<li onclick="checkChoice(${index})">${opt}</li>`).join('');
+                box.innerHTML = `<h3>${q.question}</h3><ul class="options-list">${optionsHtml}</ul>`;
+            } else if (q.type === 'text') {
+                box.innerHTML = `<h3>${q.question}</h3><input type="text" id="text-answer" placeholder="${q.placeholder}"><button class="btn btn-primary" style="margin-top:15px;" onclick="checkText()">Проверить ответ</button>`;
+            } else if (q.type === 'match') {
+                let matchHtml = q.pairs.map((pair, index) => {
+                    let optionsHtml = q.options.map(opt => `<option value="${opt}">${opt}</option>`).join('');
+                    return `<div class="match-row"><span>${pair.left}</span><select id="match-${index}"><option value="">Выберите...</option>${optionsHtml}</select></div>`;
+                }).join('');
+                box.innerHTML = `<h3>${q.question}</h3>${matchHtml}<button class="btn btn-primary" style="margin-top:15px;" onclick="checkMatch()">Проверить ответ</button>`;
+            }
+        }
+
+        function checkChoice(selectedIndex) {
+            const q = siteData.questions[currentQ];
+            const feedback = document.getElementById('feedback-box');
+            feedback.style.display = 'block';
+            if (selectedIndex === q.correct) {
+                feedback.innerHTML = `<span style="color:var(--success-color)">🟢 ПРАВИЛЬНО!</span><br><span style="font-weight:normal; font-size:0.95rem;">${q.explanation}</span>`;
+                feedback.style.background = "#e6f4ea";
+            } else {
+                feedback.innerHTML = `<span style="color:var(--error-color)">🔴 ОШИБКА.</span><br><span style="font-weight:normal; font-size:0.95rem;">${q.explanation}</span>`;
+                feedback.style.background = "#fce8e6";
+            }
+        }
+
+        function checkText() {
+            const q = siteData.questions[currentQ];
+            const userAnswer = document.getElementById('text-answer').value.trim();
+            const feedback = document.getElementById('feedback-box');
+            feedback.style.display = 'block';
+            if (userAnswer.toLowerCase() === q.correctAnswer.toLowerCase()) {
+                feedback.innerHTML = `<span style="color:var(--success-color)">🟢 ВЕРНО!</span><br><span style="font-weight:normal; font-size:0.95rem;">${q.explanation}</span>`;
+                feedback.style.background = "#e6f4ea";
+            } else {
+                feedback.innerHTML = `<span style="color:var(--error-color)">🔴 НЕВЕРНО. Ожидалось: ${q.correctAnswer}</span><br><span style="font-weight:normal; font-size:0.95rem;">${q.explanation}</span>`;
+                feedback.style.background = "#fce8e6";
+            }
+        }
+
+        function checkMatch() {
+            const q = siteData.questions[currentQ];
+            let allCorrect = true;
+            q.pairs.forEach((pair, index) => {
+                if (document.getElementById(`match-${index}`).value !== pair.right) allCorrect = false;
+            });
+            const feedback = document.getElementById('feedback-box');
+            feedback.style.display = 'block';
+            if (allCorrect) {
+                feedback.innerHTML = `<span style="color:var(--success-color)">🟢 ВЕРНО! Все пары совпали.</span><br><span style="font-weight:normal; font-size:0.95rem;">${q.explanation}</span>`;
+                feedback.style.background = "#e6f4ea";
+            } else {
+                feedback.innerHTML = `<span style="color:var(--error-color)">🔴 ЕСТЬ ОШИБКИ.</span><br><span style="font-weight:normal; font-size:0.95rem;">${q.explanation}</span>`;
+                feedback.style.background = "#fce8e6";
+            }
+        }
+
+        function nextQuestion() {
+            currentQ = (currentQ + 1) % siteData.questions.length;
+            renderQuestion();
+        }
+
+        // --- 5. ЛОГИКА ГОЛОВОЛОМКИ ---
+        let currentPuzzle = 0;
+
+        function renderPuzzle() {
+            const p = siteData.puzzles[currentPuzzle];
+            const box = document.getElementById('puzzle-box');
+            
+            box.innerHTML = `
+                <img src="${p.photo}" class="puzzle-img" alt="Кто это?" onerror="this.src='https://via.placeholder.com/400x350/004b93/ffffff?text=Добавьте+фото+в+папку+people'">
+                <div id="puzzle-answer" class="puzzle-answer">
+                    <div class="puzzle-name">${p.name}</div>
+                    <div class="puzzle-pos">${p.position}</div>
+                    <div class="puzzle-hint">💡 ${p.hint}</div>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-primary" id="reveal-btn" onclick="revealPuzzle()">Показать ответ</button>
+                    <button class="btn btn-outline" onclick="nextPuzzle()">Следующий ➡️</button>
+                </div>
+            `;
+        }
+
+        function revealPuzzle() {
+            document.getElementById('puzzle-answer').style.display = 'block';
+            document.getElementById('reveal-btn').style.display = 'none';
+        }
+
+        function nextPuzzle() {
+            currentPuzzle = (currentPuzzle + 1) % siteData.puzzles.length;
+            renderPuzzle();
+        }
+
+        // --- ИНИЦИАЛИЗАЦИЯ ---
+        window.onload = function() {
+            renderLectures();
+            renderEvents();
+            renderQuestion();
+            renderPuzzle();
+        };
+    </script>
+</body>
+</html>
